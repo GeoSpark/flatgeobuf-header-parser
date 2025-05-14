@@ -12,28 +12,6 @@ export const PartialFileFetcher: React.FC<Props> = ({ url }) => {
     const [parsedData, setParsedData] = useState<object>({});
     const [error, setError] = useState<string | null>(null);
 
-    function isFlatGeobuf(buffer: ArrayBuffer): boolean {
-        // The FlatGeobuf magic number: "FlatGeobuf"
-        const expectedMagic = [
-            0x66,
-            0x67,
-            0x62,
-            0x03,
-            0x66,
-            0x67,
-            0x62,
-            0x01,
-        ];
-
-        const bytes = new Uint8Array(buffer, 0, expectedMagic.length);
-        for (let i = 0; i < expectedMagic.length; i++) {
-            if (bytes[i] !== expectedMagic[i]) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     useEffect(() => {
         const fetchHeader = async () => {
             try {
@@ -93,10 +71,46 @@ export const PartialFileFetcher: React.FC<Props> = ({ url }) => {
     );
 };
 
-// Stub parser function for full header buffer
+
+function isFlatGeobuf(buffer: ArrayBuffer): boolean {
+    // The FlatGeobuf magic number: "FlatGeobuf"
+    const expectedMagic = [
+        0x66,
+        0x67,
+        0x62,
+        0x03,
+        0x66,
+        0x67,
+        0x62,
+        0x01,
+    ];
+
+    const bytes = new Uint8Array(buffer, 0, expectedMagic.length);
+    for (let i = 0; i < expectedMagic.length; i++) {
+        if (bytes[i] !== expectedMagic[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function parseCsvString(input: string): string[] {
+    // Matches 'quoted, strings', trims, and unescapes single quotes if needed
+    const regex = /'([^']*)'/g;
+    const results: string[] = [];
+    let match: RegExpExecArray | null;
+
+    while ((match = regex.exec(input)) !== null) {
+        results.push(match[1]);
+    }
+
+    return results;
+}
+
 function parseHeader(buffer: ArrayBuffer): object {
     const buf = new ByteBuffer(new Uint8Array(buffer));
     const header = FlatGeobuf.Header.getRootAsHeader(buf);
-
-    return JSON.parse(header.metadata() || "");
+    const o = JSON.parse(header.metadata() || "");
+    o["rendered_columns"] = parseCsvString(o["rendered_columns"]);
+    return o;
 }

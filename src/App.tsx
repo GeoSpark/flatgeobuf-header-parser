@@ -5,7 +5,7 @@ function App() {
   return (
     <>
       <div>
-          <PartialFileFetcher url={'https://sparkgeo.github.io/fgb-metadata-injector/worldcover-stats-nuts-level0.fgb'}/>
+          <PartialFileFetcher url={'https://geospark.github.io/flatgeobuf-header-parser/worldcover-stats-nuts-level0.fgb'}/>
       </div>
     </>
   )
